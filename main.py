@@ -19,6 +19,8 @@ from mesh import Mesh, safe_normalize
 class GUI:
     def __init__(self, opt):
         self.opt = opt  # shared with the trainer's opt to support in-place modification of rendering parameters.
+        if "save_path" not in opt:
+            self.opt.save_path = self.opt.input[:-4] + "/output"
         self.gui = opt.gui # enable gui
         self.W = opt.W
         self.H = opt.H

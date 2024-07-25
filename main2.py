@@ -19,6 +19,7 @@ from mesh_renderer import Renderer
 class GUI:
     def __init__(self, opt):
         self.opt = opt  # shared with the trainer's opt to support in-place modification of rendering parameters.
+
         self.gui = opt.gui # enable gui
         self.W = opt.W
         self.H = opt.H
@@ -696,6 +697,8 @@ if __name__ == "__main__":
 
     # auto find mesh from stage 1
     if opt.mesh is None:
+        if "save_path" not in opt:
+            opt.save_path = opt.input[:-4] + "/output"
         default_path = os.path.join(opt.outdir, opt.save_path + '_mesh.' + opt.mesh_format)
         if os.path.exists(default_path):
             opt.mesh = default_path

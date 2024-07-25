@@ -30,6 +30,11 @@ class BLIP2():
 
         return generated_text
 
+def rgb2gray(rgb):
+    intensities = np.dot(rgb[...,:3], [0.2989, 0.5870, 0.1140])
+    img_copy = rgb.copy()
+    img_copy[..., :3] = np.stack((intensities, intensities, intensities), axis=-1)
+    return img_copy
 
 if __name__ == '__main__':
 
@@ -38,7 +43,10 @@ if __name__ == '__main__':
     parser.add_argument('--model', default='u2net', type=str, help="rembg model, see https://github.com/danielgatis/rembg#models")
     parser.add_argument('--size', default=256, type=int, help="output resolution")
     parser.add_argument('--border_ratio', default=0.2, type=float, help="output border ratio")
-    parser.add_argument('--recenter', type=bool, default=True, help="recenter, potentially not helpful for multiview zero123")    
+    parser.add_argument('--recenter', type=bool, default=True, help="recenter, potentially not helpful for multiview zero123")
+    parser.add_argument('--white_bg', type=bool, default=False, help="make the bg white")
+    parser.add_argument('--grayscale', type=bool, default=False, help="make the image grayscale")
+
     opt = parser.parse_args()
 
     session = rembg.new_session(model_name=opt.model)
@@ -62,14 +70,24 @@ if __name__ == '__main__':
         
         # carve background
         print(f'[INFO] background removal...')
-        carved_image = rembg.remove(image, session=session) # [H, W, 4]
-        mask = carved_image[..., -1] > 0
+        # First find the background and the mask
+        carved_image = rembg.remove(image, session=session)
+        mask = carved_image[..., -1] > 0 # The values that were not made transparent
+        flip_mask = carved_image[..., -1] <= 0
+
+        # Then change the bg color if appropriate
+        if opt.white_bg:
+            # carved_image = rembg.bg.apply_background_color(carved_image, (255, 255, 255, 255))
+            carved_image = rembg.remove(image, session=session, bgcolor=(255, 255, 255, 255)) # [H, W, 4]
+
+        if opt.grayscale:
+            carved_image = rgb2gray(carved_image)
 
         # recenter
         if opt.recenter:
             print(f'[INFO] recenter...')
             final_rgba = np.zeros((opt.size, opt.size, 4), dtype=np.uint8)
-            
+
             coords = np.nonzero(mask)
             x_min, x_max = coords[0].min(), coords[0].max()
             y_min, y_max = coords[1].min(), coords[1].max()

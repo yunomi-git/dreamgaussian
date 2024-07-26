@@ -1,9 +1,4 @@
-from openai import OpenAI
-from api_key import api_key
-import openai
-import requests
 import os
-import datetime
 
 use_gui = True
 method = "image_sai_custom"

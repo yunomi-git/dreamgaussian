@@ -72,7 +72,7 @@ feature_lr: 0.01
 opacity_lr: 0.05
 scaling_lr: 0.005
 rotation_lr: 0.005
-percent_dense: 0.15 # Swapped
+percent_dense: 0.2 # Swapped
 density_start_iter: 100
 density_end_iter: 3000
 densification_interval: 100

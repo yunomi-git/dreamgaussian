@@ -1,3 +1,14 @@
+trimesh[easy]
+opencv-python
+#pip install -e "git+https://github.com/Formlabs/Formlabs-SDK.git/#egg=formlabs-sdk&subdirectory=python/pythonlib"
+pyglet<2
+embreex
+pyembree
+
+speechrecognition
+pyaudio
+pyttsx3
+
 tqdm
 rich
 ninja

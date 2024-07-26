@@ -4,17 +4,6 @@ import numpy as np
 from trimesh.visual.color import ColorVisuals
 import trimesh.ray.ray_pyembree
 import cv2
-
-mesh_path = 'logs/Experiments/cartoon/bunny_pancake_image_sai_custom_1024/output_mesh.obj'
-mesh = trimesh.load(mesh_path)
-mesh_aux = trimesh_util.MeshAuxilliaryInfo(mesh)
-
-visual = mesh.visual
-num_vertices = len(mesh.vertices)
-
-## SHOW
-# trimesh_util.show_mesh(mesh)
-
 def get_vertex_colors_from_uv(mesh: trimesh.Trimesh):
     num_vertices = len(mesh.vertices)
     vertex_colors = np.zeros((num_vertices, 4))
@@ -52,7 +41,7 @@ def grab_edge_magnitudes_from_uv(mesh: trimesh.Trimesh):
 
     # cv2.imshow('Canny Edge', edges)
     # cv2.waitKey(0)
-
+    num_vertices = len(mesh.vertices)
     vertex_colors = np.zeros(num_vertices)
     for i in range(num_vertices):
         uv = mesh.visual.vertex_attributes.data['uv'][i]
@@ -80,62 +69,74 @@ def get_grayscale_magnitudes(vertex_colors, include_alpha=False):
     return vertex_grayscale
 
 
-vertex_colors = get_vertex_colors_from_uv(mesh)
-edge_magnitudes = grab_edge_magnitudes_from_uv(mesh)
-edge_colors = convert_magnitudes_to_color_format(edge_magnitudes, include_alpha=True)
-grayscale_magnitudes = get_grayscale_magnitudes(vertex_colors, include_alpha=True)
-vertex_grayscale_colors = convert_magnitudes_to_color_format(grayscale_magnitudes, include_alpha=True)
-
-# Removes duplicate nodes while preserving colors
-edge_weight = 1.0
-color_combo = np.ones((num_vertices, 4)) * 255.0
-color_combo[..., :3] = edge_weight * (255 - edge_colors[..., :3]) + (1.0 - edge_weight) * vertex_grayscale_colors[..., :3]
 
 
-# make a new one
-new_mesh = trimesh.load(mesh_path)
-new_mesh.visual = ColorVisuals(mesh=new_mesh, face_colors=None, vertex_colors=color_combo)
-new_mesh = new_mesh.process(merge_tex=True, merge_norm=True)
 
-## Show
-trimesh_util.show_mesh(new_mesh)
+def modify_obj_with_color(obj_path, edge_weight=0.5, show_progress=False) -> trimesh.Trimesh:
+    mesh = trimesh.load(obj_path)
+    mesh_aux = trimesh_util.MeshAuxilliaryInfo(mesh)
 
+    num_vertices = len(mesh.vertices)
 
-# Calculate deformations
-# vertex_colors = mesh.visual.vertex_colors
-# grayscale_magnitudes = get_grayscale_magnitudes(vertex_colors, include_alpha=True)
-# vertex_grayscale = convert_magnitudes_to_color_format(grayscale_magnitudes, include_alpha=False) / 255
+    ## SHOW
+    if show_progress:
+        trimesh_util.show_mesh(mesh)
 
-vertex_grayscale = new_mesh.visual.vertex_colors[..., :3] / 255.0
-flip_magnitudes = True
-if flip_magnitudes:
-    vertex_grayscale = 1 - vertex_grayscale
-vertex_grayscale -= np.min(vertex_grayscale)
-vertex_grayscale /= np.max(vertex_grayscale)
-vertex_normals = new_mesh.vertex_normals
-scale = np.min(mesh_aux.bound_length) * 0.05
+    vertex_colors = get_vertex_colors_from_uv(mesh)
+    edge_magnitudes = grab_edge_magnitudes_from_uv(mesh)
+    edge_colors = convert_magnitudes_to_color_format(edge_magnitudes, include_alpha=True)
+    grayscale_magnitudes = get_grayscale_magnitudes(vertex_colors, include_alpha=True)
+    vertex_grayscale_colors = convert_magnitudes_to_color_format(grayscale_magnitudes, include_alpha=True)
 
-gray_avg = np.mean(vertex_grayscale)
-# vertex_grayscale -= gray_avg
-# vertex_grayscale[vertex_grayscale < 0] = 0
-vertex_diff = (gray_avg - vertex_grayscale) * scale * vertex_normals
-old_vertices = new_mesh.vertices.copy()
-new_mesh.vertices += vertex_diff
+    # Removes duplicate nodes while preserving colors
+    color_combo = np.ones((num_vertices, 4)) * 255.0
+    color_combo[..., :3] = edge_weight * (255 - edge_colors[..., :3]) + (1.0 - edge_weight) * vertex_grayscale_colors[..., :3]
 
-trimesh.smoothing.filter_laplacian(new_mesh, lamb=0.1)
+    # make a new one
+    new_mesh = trimesh.load(obj_path)
+    new_mesh.visual = ColorVisuals(mesh=new_mesh, face_colors=None, vertex_colors=color_combo)
+    new_mesh = new_mesh.process(merge_tex=True, merge_norm=True)
 
-## SHOW
-trimesh_util.show_mesh(new_mesh)
+    ## Show
+    if show_progress:
+        trimesh_util.show_mesh(new_mesh)
 
-new_mesh.export("temp.obj")
+    # Calculate deformations
+    vertex_grayscale = new_mesh.visual.vertex_colors[..., :3] / 255.0
+    flip_magnitudes = True
+    if flip_magnitudes:
+        vertex_grayscale = 1 - vertex_grayscale
+    vertex_grayscale -= np.min(vertex_grayscale)
+    vertex_grayscale /= np.max(vertex_grayscale)
+    vertex_normals = new_mesh.vertex_normals
+    scale = np.min(mesh_aux.bound_length) * 0.05
 
-s = trimesh.Scene()
-vertices = new_mesh.vertices
-vertex_grayscale_colors = get_grayscale_magnitudes(vertex_colors, include_alpha=True)
-point_cloud = trimesh.points.PointCloud(vertices=mesh.vertices,
-                                        colors=vertex_colors)
-s.add_geometry(point_cloud)
-s.add_geometry(new_mesh)
-s.show()
+    gray_avg = np.mean(vertex_grayscale)
+    # vertex_grayscale -= gray_avg
+    # vertex_grayscale[vertex_grayscale < 0] = 0
+    vertex_diff = (gray_avg - vertex_grayscale) * scale * vertex_normals
+    old_vertices = new_mesh.vertices.copy()
+    new_mesh.vertices += vertex_diff
 
-print("")
+    trimesh.smoothing.filter_laplacian(new_mesh, lamb=0.1)
+
+    ## SHOW
+    if show_progress:
+        trimesh_util.show_mesh(new_mesh)
+
+    if show_progress:
+        s = trimesh.Scene()
+        vertices = new_mesh.vertices
+        vertex_grayscale_colors = get_grayscale_magnitudes(vertex_colors, include_alpha=True)
+        point_cloud = trimesh.points.PointCloud(vertices=mesh.vertices,
+                                                colors=vertex_colors)
+        s.add_geometry(point_cloud)
+        s.add_geometry(new_mesh)
+        s.show()
+
+    return new_mesh
+
+if __name__=="__main__":
+    mesh_path = 'logs/Experiments/cartoon/bunny_pancake_image_sai_custom_1024/output_mesh.obj'
+    new_mesh = modify_obj_with_color(mesh_path, mesh_weight=0.5, show_progress=True)
+    new_mesh.export("temp.obj")

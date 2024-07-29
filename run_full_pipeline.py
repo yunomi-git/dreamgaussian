@@ -14,7 +14,7 @@ import trimesh_obj
 
 use_gui = False
 use_voice = True
-do_print = True
+do_print = False
 method = "image_sai_custom"
 client = OpenAI(api_key=api_key)
 

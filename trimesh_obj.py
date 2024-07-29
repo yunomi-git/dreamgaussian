@@ -37,7 +37,7 @@ def grab_edge_magnitudes_from_uv(mesh: trimesh.Trimesh):
     # edges[edges > 0] = 1.0
     # Blur again for smooth edges
     edges = cv2.GaussianBlur(edges, (5, 5), 20)
-    edges = cv2.GaussianBlur(edges, (5, 5), 20)
+    # edges = cv2.GaussianBlur(edges, (5, 5), 20)
 
     # cv2.imshow('Canny Edge', edges)
     # cv2.waitKey(0)
@@ -69,6 +69,17 @@ def get_grayscale_magnitudes(vertex_colors, include_alpha=False):
     return vertex_grayscale
 
 
+
+# vertex_colors = get_vertex_colors_from_uv(mesh)
+# edge_magnitudes = grab_edge_magnitudes_from_uv(mesh)
+# edge_colors = convert_magnitudes_to_color_format(edge_magnitudes, include_alpha=True)
+# grayscale_magnitudes = get_grayscale_magnitudes(vertex_colors, include_alpha=True)
+# vertex_grayscale_colors = convert_magnitudes_to_color_format(grayscale_magnitudes, include_alpha=True)
+#
+# # Removes duplicate nodes while preserving colors
+# edge_weight = 0.5
+# color_combo = np.ones((num_vertices, 4)) * 255.0
+# color_combo[..., :3] = edge_weight * (255 - edge_colors[..., :3]) + (1.0 - edge_weight) * vertex_grayscale_colors[..., :3]
 
 
 

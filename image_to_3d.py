@@ -1,13 +1,20 @@
 import os
 
-use_gui = True
-method = "image_sai_custom"
+use_gui = False
+method = "image_sai"
 
 prompt = ""
-img_name = "Experiments/cartoon/bunny_pancake"
-size = 1024 # NEED TO ALTER THE YAML FILE MANUALLY
+img_name = "Experiments/hardware/hammer1"
+size = 1024
+yaml_args = {
+  "ref_size": 1024,
+  "percent_dense": 0.15,
+  # "num_pts": 10000
+}
 
-append_name = "_" + method + "_" + str(size) + ""
+append_name = "_" + method
+for key in list(yaml_args.keys()):
+  append_name += "_" + key + str(yaml_args[key])
 convert_to_grayscale = False
 
 if convert_to_grayscale:
@@ -21,12 +28,14 @@ if convert_to_grayscale:
   bashCommand += " --grayscale True"
 os.system(bashCommand)
 
-def optimize(version):
+def optimize(version, yaml_args):
   if version == 1:
     bashCommand = "python main.py"
   else:
     bashCommand = "python main2.py"
   bashCommand += " --config configs/" + method + ".yaml input=" + quote(img_name + "_rgba.png") + " save_path=" + quote(img_name + append_name + "/output")
+  for key in list(yaml_args.keys()):
+    bashCommand += " " + key + "=" + str(yaml_args[key])
   if prompt is not None:
     bashCommand += " prompt=" + "\"" + prompt + "\""
   if use_gui:
@@ -35,5 +44,5 @@ def optimize(version):
   print(bashCommand)
   os.system(bashCommand)
 
-optimize(1)
+optimize(1, yaml_args)
 # optimize(2)

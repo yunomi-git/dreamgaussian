@@ -12,7 +12,7 @@ import trimesh_util
 import trimesh
 import trimesh_obj
 
-use_gui = False
+use_gui = True
 use_voice = True
 do_print = False
 method = "image_sai_custom"
@@ -20,14 +20,19 @@ client = OpenAI(api_key=api_key)
 
 if use_voice:
   print(">Initializing. Wait...")
-  speech_playground.speak_text("Start speaking")
+  # speech_playground.speak_text("Start speaking")
+  print(">Waiting for Hello")
+  main_request = speech_playground.wait_for_speech(5)
+  speech_playground.speak_text("Hey, what can I make for you?")
   main_request = speech_playground.grab_speech(10)
   print("You requested a " + main_request)
-  speech_playground.speak_text("You requested a " + main_request)
+  speech_playground.speak_text("You wanted a " + main_request + ". You got it!")
+  # speech_playground.speak_text("You requested a " + main_request)
 else:
   main_request = "cat sitting on bowl of ice cream."
 
-prompt = "a cartoon image of " + main_request + ". do not add background"
+# prompt = "a cartoon image of " + main_request + ". do not add background"
+prompt = "a dslr isotropic image of " + main_request + ". do not add background"
 def request_image(prompt):
   print("Fetching image")
   image_response = client.images.generate(

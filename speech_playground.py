@@ -12,6 +12,25 @@ def speak_text(command):
     engine.say(command)
     engine.runAndWait()
 
+def wait_for_speech(max_time = 10.0):
+    try:
+        # use the microphone as source for input.
+        with sr.Microphone() as source2:
+            # wait for a second to let the recognizer
+            # adjust the energy threshold based on
+            # the surrounding noise level
+            r.adjust_for_ambient_noise(source2, duration=0.1)
+
+            # listens for the user's input
+            print("Listening")
+            audio2 = r.listen(source2, timeout=max_time)
+
+    except sr.RequestError as e:
+        print("Could not request results {0}".format(e))
+
+    except sr.UnknownValueError:
+        print("unknown error occurred")
+
 def grab_speech(max_time=10.0):
     try:
         # use the microphone as source for input.
@@ -19,11 +38,11 @@ def grab_speech(max_time=10.0):
             # wait for a second to let the recognizer
             # adjust the energy threshold based on
             # the surrounding noise level
-            r.adjust_for_ambient_noise(source2, duration=0.2)
+            r.adjust_for_ambient_noise(source2, duration=0.05)
 
             # listens for the user's input
             print("Listening")
-            audio2 = r.listen(source2, timeout=10)
+            audio2 = r.listen(source2, timeout=max_time)
 
             print("Converting")
             # Using google to recognize audio

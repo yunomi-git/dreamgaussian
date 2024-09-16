@@ -10,9 +10,17 @@ import os
 import formlabs
 from formlabs.models.auto_orient_post_request import AutoOrientPostRequest
 
+# def create_scene(preform):
+#     return preform.api.scene_post({
+#         "machine_type": "FORM-4-0",
+#         "material_code": "FLGPGR05",
+#         "slice_thickness": 0.1,
+#         "print_setting": "DEFAULT",
+#     })
+
 def create_scene(preform):
     return preform.api.scene_post({
-        "machine_type": "FORM-4-0",
+        "machine_type": "FORM-3-0",
         "material_code": "FLGPGR05",
         "slice_thickness": 0.1,
         "print_setting": "DEFAULT",

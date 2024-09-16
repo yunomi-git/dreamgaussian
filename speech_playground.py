@@ -4,6 +4,41 @@ import pyttsx3
 # Initialize the recognizer
 r = sr.Recognizer()
 
+class Speaker:
+    def __init__(self):
+        self.source = sr.Microphone()
+        self.r = sr.Recognizer()
+
+    def calibrate(self, duration=0.1):
+        r.adjust_for_ambient_noise(self.source, duration=duration)
+
+    def wait_for_speech(self, max_time=10.0, match_text=None):
+        print("Listening")
+        if match_text is None:
+            r.listen(self.source, timeout=max_time)
+        else:
+            received_text = ""
+            while received_text.lower() != match_text:
+                received_text = self.grab_speech(max_time=max_time)
+
+    def grab_speech(self, max_time=10.0):
+        try:
+            audio2 = r.listen(self.source, timeout=max_time)
+            # Using google to recognize audio
+            received_text = self.r.recognize_google(audio2)
+            received_text = received_text.lower()
+        except sr.RequestError as e:
+            print("Could not request results {0}".format(e))
+        except sr.UnknownValueError:
+            print("unknown error occurred")
+
+        return received_text
+
+    def speak_text(self, command):
+        engine = pyttsx3.init()
+        engine.say(command)
+        engine.runAndWait()
+
 # Function to convert text to
 # speech
 def speak_text(command):

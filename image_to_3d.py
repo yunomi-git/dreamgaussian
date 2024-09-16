@@ -1,10 +1,13 @@
 import os
+import trimesh
+import trimesh_util
+import trimesh_obj
 
 use_gui = False
 method = "image_sai"
 
 prompt = ""
-img_name = "Experiments/hardware/hammer1"
+img_name = "Experiments/hardware/wrench1"
 size = 1024
 yaml_args = {
   "ref_size": 1024,
@@ -45,4 +48,14 @@ def optimize(version, yaml_args):
   os.system(bashCommand)
 
 optimize(1, yaml_args)
-# optimize(2)
+save_name = img_name + append_name
+generated_output_path = "logs/" + save_name + "/output_mesh.obj"
+mesh = trimesh.load(generated_output_path)
+trimesh_util.show_mesh(mesh)
+
+print("> Processing to add details")
+new_mesh = trimesh_obj.modify_obj_with_color(obj_path=generated_output_path,
+                                             edge_weight=0.5, show_progress=False)
+trimesh_util.show_mesh(new_mesh)
+processed_output_path = "logs/" + save_name + "/processed_mesh.obj"
+new_mesh.export(processed_output_path)

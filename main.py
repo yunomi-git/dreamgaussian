@@ -81,9 +81,14 @@ class GUI:
             # initialize gaussians to a blob
             self.renderer.initialize(num_pts=self.opt.num_pts)
 
+        self.automatic_start = opt.automatic_start
+
         if self.gui:
             dpg.create_context()
-            self.register_dpg()
+            if self.automatic_start:
+                self.register_dpg_armless()
+            else:
+                self.register_dpg()
             self.test_step()
 
     def __del__(self):
@@ -294,7 +299,7 @@ class GUI:
 
         self.need_update = True
 
-        if self.gui:
+        if self.gui and not self.automatic_start:
             dpg.set_value("_log_train_time", f"{t:.4f}ms")
             dpg.set_value(
                 "_log_train_log",
@@ -372,7 +377,8 @@ class GUI:
         t = starter.elapsed_time(ender)
 
         if self.gui:
-            dpg.set_value("_log_infer_time", f"{t:.4f}ms ({int(1000/t)} FPS)")
+            if not self.automatic_start:
+                dpg.set_value("_log_infer_time", f"{t:.4f}ms ({int(1000/t)} FPS)")
             dpg.set_value(
                 "_texture", self.buffer_image
             )  # buffer must be contiguous, else seg fault!
@@ -544,6 +550,121 @@ class GUI:
             self.renderer.gaussians.save_ply(path)
 
         print(f"[INFO] save model to {path}.")
+
+    def register_dpg_armless(self):
+        ### register texture
+
+        with dpg.texture_registry(show=False):
+            dpg.add_raw_texture(
+                self.W,
+                self.H,
+                self.buffer_image,
+                format=dpg.mvFormat_Float_rgb,
+                tag="_texture",
+            )
+
+        ### register window
+
+        # the rendered image, as the primary window
+        with dpg.window(
+                tag="_primary_window",
+                width=self.W,
+                height=self.H,
+                pos=[0, 0],
+                no_move=True,
+                no_title_bar=True,
+                no_scrollbar=True,
+        ):
+            # add the texture
+            dpg.add_image("_texture")
+
+        # with dpg.group(horizontal=True):
+        #     dpg.add_text("Infer time: ")
+        #     dpg.add_text("no data", tag="_log_infer_time")
+            ### register camera handler
+
+        def callback_camera_drag_rotate_or_draw_mask(sender, app_data):
+            if not dpg.is_item_focused("_primary_window"):
+                return
+
+            dx = app_data[1]
+            dy = app_data[2]
+
+            self.cam.orbit(dx, dy)
+            self.need_update = True
+
+        def callback_camera_wheel_scale(sender, app_data):
+            if not dpg.is_item_focused("_primary_window"):
+                return
+
+            delta = app_data
+
+            self.cam.scale(delta)
+            self.need_update = True
+
+        def callback_camera_drag_pan(sender, app_data):
+            if not dpg.is_item_focused("_primary_window"):
+                return
+
+            dx = app_data[1]
+            dy = app_data[2]
+
+            self.cam.pan(dx, dy)
+            self.need_update = True
+
+        def callback_set_mouse_loc(sender, app_data):
+            if not dpg.is_item_focused("_primary_window"):
+                return
+
+            # just the pixel coordinate in image
+            self.mouse_loc = np.array(app_data)
+
+        with dpg.handler_registry():
+            # for camera moving
+            dpg.add_mouse_drag_handler(
+                button=dpg.mvMouseButton_Left,
+                callback=callback_camera_drag_rotate_or_draw_mask,
+            )
+            dpg.add_mouse_wheel_handler(callback=callback_camera_wheel_scale)
+            dpg.add_mouse_drag_handler(
+                button=dpg.mvMouseButton_Middle, callback=callback_camera_drag_pan
+            )
+
+        dpg.create_viewport(
+            title="Gaussian3D",
+            width=self.W + 600,
+            height=self.H + (45 if os.name == "nt" else 0),
+            resizable=False,
+        )
+
+        ### global theme
+        with dpg.theme() as theme_no_padding:
+            with dpg.theme_component(dpg.mvAll):
+                # set all padding to 0 to avoid scroll bar
+                dpg.add_theme_style(
+                    dpg.mvStyleVar_WindowPadding, 0, 0, category=dpg.mvThemeCat_Core
+                )
+                dpg.add_theme_style(
+                    dpg.mvStyleVar_FramePadding, 0, 0, category=dpg.mvThemeCat_Core
+                )
+                dpg.add_theme_style(
+                    dpg.mvStyleVar_CellPadding, 0, 0, category=dpg.mvThemeCat_Core
+                )
+
+        dpg.bind_item_theme("_primary_window", theme_no_padding)
+
+        dpg.setup_dearpygui()
+
+        ### register a larger font
+        # get it from: https://github.com/lxgw/LxgwWenKai/releases/download/v1.300/LXGWWenKai-Regular.ttf
+        if os.path.exists("LXGWWenKai-Regular.ttf"):
+            with dpg.font_registry():
+                with dpg.font("LXGWWenKai-Regular.ttf", 18) as default_font:
+                    dpg.bind_font(default_font)
+
+        # dpg.show_metrics()
+
+        dpg.show_viewport()
 
     def register_dpg(self):
         ### register texture
@@ -824,13 +945,6 @@ class GUI:
             self.cam.pan(dx, dy)
             self.need_update = True
 
-        def callback_set_mouse_loc(sender, app_data):
-            if not dpg.is_item_focused("_primary_window"):
-                return
-
-            # just the pixel coordinate in image
-            self.mouse_loc = np.array(app_data)
-
         with dpg.handler_registry():
             # for camera moving
             dpg.add_mouse_drag_handler(
@@ -878,6 +992,32 @@ class GUI:
 
         dpg.show_viewport()
 
+    def render_automatic(self, train_steps=500):
+        assert self.gui
+        self.prepare_train()
+        self.training = True
+        print("begin train")
+        self.cam.orbit(0, 700)
+        self.need_update = True
+        while dpg.is_dearpygui_running():
+            if self.training:
+                self.train_step()
+                self.cam.orbit(57, 0.0)
+                self.need_update = True
+                # update texture every frame
+                self.test_step()
+
+            dpg.render_dearpygui_frame()
+
+            if self.step == train_steps:
+                self.renderer.gaussians.prune(min_opacity=0.01, extent=1, max_screen_size=1)
+                dpg.destroy_context()
+                break
+
+        # save
+        self.save_model(mode='model')
+        self.save_model(mode='geo+tex')
+
     def render(self):
         assert self.gui
         while dpg.is_dearpygui_running():
@@ -898,7 +1038,6 @@ class GUI:
         # save
         self.save_model(mode='model')
         self.save_model(mode='geo+tex')
-        
 
 if __name__ == "__main__":
     import argparse
@@ -914,6 +1053,9 @@ if __name__ == "__main__":
     gui = GUI(opt)
 
     if opt.gui:
-        gui.render()
+        if opt.automatic_start:
+            gui.render_automatic()
+        else:
+            gui.render()
     else:
         gui.train(opt.iters)

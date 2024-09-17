@@ -14,7 +14,7 @@ from process import remove_background
 import grab_pictures
 
 use_gui = True
-use_voice = True
+use_voice = False
 do_print = False
 size = 1024
 method = "image_sai_custom"
@@ -31,10 +31,11 @@ if use_voice:
     print("You requested a " + main_request)
     speaker.speak_text("You wanted a " + main_request + ". You got it!")
 else:
-    main_request = "cat sitting on bowl of ice cream."
+    main_request = "pencil holder with 2 compartments. It should be panda themed"
 
 # prompt = "a cartoon image of " + main_request + ". do not add background"
-prompt = "a dslr isotropic image of " + main_request + ". do not add background"
+# prompt = "a dslr isotropic image of " + main_request + ". do not add background"
+prompt = "Give me an image of " + main_request + ". The view should be isotropic. Do not add a background. It should be manufacturable from gray plastic"
 
 cur_time = datetime.datetime.now()
 save_name = "dalle_" + cur_time.strftime("%d_%m_%H_%M") + "_" + main_request
@@ -49,7 +50,7 @@ def generate_3d(version, source_img, size=1024):
     else:
         bashCommand = "python main2.py"
     bashCommand += (" --config configs/" + method + ".yaml input=" + quote(source_img)
-                    + " save_path=" + quote(save_name + "/output") + 'ref_size=' + str(size))
+                    + " save_path=" + quote(save_name + "/output") + ' ref_size=' + str(size) + " automatic_start=True ")
     if prompt is not None:
         bashCommand += " prompt=" + quote(prompt)
     if use_gui:

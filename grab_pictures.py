@@ -1,15 +1,7 @@
 from openai import OpenAI
 from api_key import api_key
-import openai
 import requests
 import os
-import datetime
-import speech_playground
-import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
-import trimesh_util
-import trimesh
-import trimesh_obj
 from pathlib import Path
 from process import remove_background
 

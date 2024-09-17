@@ -632,7 +632,7 @@ class GUI:
 
         dpg.create_viewport(
             title="Gaussian3D",
-            width=self.W + 600,
+            width=self.W, # + 600,
             height=self.H + (45 if os.name == "nt" else 0),
             resizable=False,
         )

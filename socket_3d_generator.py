@@ -27,8 +27,9 @@
 import socket
 import os
 
+print("Started")
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.bind(("18.10.80.29", 12345)) #if the clients/server are on different network you shall bind to ('', port)
+s.bind(("10.29.216.52", 12345)) #if the clients/server are on different network you shall bind to ('', port)
 
 s.listen(10)
 c, addr = s.accept()

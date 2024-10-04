@@ -21,7 +21,7 @@ client = OpenAI(api_key=api_key)
 def augment_prompt(orig_prompt):
     # prompt = "a cartoon image of " + main_request + ". do not add background"
     # prompt = "a dslr isotropic image of " + main_request + ". do not add background"
-    prompt = "a realistic image of " + main_request + ". Do not add any other objects. The view should be isotropic. Do not add a background. Put it in a default pose"
+    prompt = "a realistic image of " + orig_prompt + ". Do not add any other objects. The view should be isotropic. Do not add a background. Put it in a default pose"
     return prompt
 
 def get_request_voice():

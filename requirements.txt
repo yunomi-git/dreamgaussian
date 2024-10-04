@@ -1,9 +1,12 @@
 trimesh[easy]
 opencv-python
 #pip install -e "git+https://github.com/Formlabs/Formlabs-SDK.git/#egg=formlabs-sdk&subdirectory=python/pythonlib"
+#pip install git+https://github.com/facebookresearch/segment-anything.git # not anymore
+#pip install -U git+https://github.com/luca-medeiros/lang-segment-anything.git
 pyglet<2
 embreex
 pyembree
+websockets
 
 speechrecognition
 pyaudio

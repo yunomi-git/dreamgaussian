@@ -11,7 +11,9 @@ elevation: 0
 # reference image resolution
 ref_size: 1024
 # density thresh for mesh extraction
-density_thresh: 1
+density_thresh: 0.9
+
+automatic_start: True
 
 ### Output
 outdir: logs
@@ -33,7 +35,7 @@ warmup_rgb_loss: False
 # training batch size per iter
 batch_size: 1
 # training iterations for stage 1
-iters: 500
+iters: 800
 # whether to linearly anneal timestep
 anneal_timestep: True
 # training iterations for stage 2
@@ -72,7 +74,7 @@ feature_lr: 0.01
 opacity_lr: 0.05
 scaling_lr: 0.005
 rotation_lr: 0.005
-percent_dense: 0.2 # Swapped
+percent_dense: 0.25 # Swapped
 density_start_iter: 100
 density_end_iter: 3000
 densification_interval: 100

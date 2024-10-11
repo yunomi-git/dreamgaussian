@@ -36,6 +36,24 @@ def rgb2gray(rgb):
     img_copy[..., :3] = np.stack((intensities, intensities, intensities), axis=-1)
     return img_copy
 
+def to_rgba(path, size=256):
+    file = path
+    out_dir = os.path.dirname(path)
+
+    out_base = os.path.basename(file).split('.')[0]
+    out_rgba = os.path.join(out_dir, out_base + '_rgba.png')
+
+    # load image
+    print(f'[INFO] loading image {file}...')
+    image = cv2.imread(file, cv2.IMREAD_UNCHANGED)
+
+    final_rgba = 255 * np.ones((size, size, 4), dtype=np.uint8)
+    final_rgba[:, :, :3] = image
+
+    # write image
+    cv2.imwrite(out_rgba, final_rgba)
+    return out_rgba
+
 def remove_background(path, size=256, border_ratio=0.2):
     session = rembg.new_session(model_name='u2net')
 

@@ -7,8 +7,20 @@ from api_key import api_key
 from openai import OpenAI
 import requests
 from diffusers import StableDiffusionInpaintPipeline
+import os
 
+cached_image = {
+    "a cat doing an ollie on a skateboard": "dalle/a realistic image of a cat doing a ollie on a skateboard. Do not add any other objects. The view should be isotropic. Do not add a background. Put it in a default pose/1",
+    "a carabiner": "dalle/a realistic image of a carabiner. Do not add any other objects. The view should be isotropic. Do not add a background. Put it in a default pose/6"
+}
 
+def get_next_numeric_name(folder):
+    folder_contents = os.listdir(folder)
+    if len(folder_contents) == 0:
+        return str(0)
+    content_values = [int(name[:name.find(".")]) for name in folder_contents if name[:name.find(".")].isdigit()]
+    next_name = max(content_values) + 1
+    return str(next_name)
 
 def show_mask(mask, ax, random_color=False):
     if random_color:
@@ -114,10 +126,10 @@ class Masker:
         answer = response.choices[0].message.content
         return answer
 
-    def edit_image(self, image_path, orig_prompt, edit_prompt, invalid_threshold=0.5, use_stable_diffusion=True):
+    def edit_image(self, image_path, orig_prompt, edit_prompt, invalid_threshold=0.5, use_stable_diffusion=True, edit_num=0):
         # get the object of the prompt
         mask_prompt = self.request_text("Which word is the object of the phrase \"" + edit_prompt + "\"? Respond only with a single word.")
-        print(mask_prompt)
+        print("Looking for:", mask_prompt, "in image", image_path)
         # do the mask
         mask, box = self.get_mask(image_path, mask_prompt, enlarge_ratio=1.5, invalid_threshold=invalid_threshold)
 
@@ -127,12 +139,13 @@ class Masker:
         else:
             use_bw = False
         masked_image = grab_mask_over_image(box, image_path, bw=use_bw)
-        mask_path = "out_pictures/dalle_edits/masked_temp.png"
+        mask_path = image_path[:image_path.rfind(".")] + "_masked" + str(edit_num) + ".png"
+        # mask_path = "out_pictures/dalle_edits/masked_temp.png"
         masked_image.save(mask_path)
 
         # Edit the image
         full_prompt = orig_prompt + ". " + edit_prompt
-        editted_image_path = "out_pictures/dalle_edits/editted_image_temp.png"
+        editted_image_path = image_path[:image_path.rfind(".")] + "_edit" + str(edit_num) + ".png"
 
         if use_stable_diffusion:
             # These should be PIL images
@@ -156,23 +169,25 @@ class Masker:
         return box, editted_image_path
 
 
-def edit_existing_image():
+def edit_existing_image(same_image=False):
     masker = Masker()
 
     # image_path = "out_pictures/Experiments/cartoon/cat_on_pancake.png"
-    image_path = "out_pictures/saved_images/cat ice cream.png"
-    orig_prompt = "A cat sitting on a stack of pancakes."
+    image_path = cached_image["a carabiner"] + ".png"
+    orig_prompt = "a carabiner"
+    # image_path = "out_pictures/saved_images/cat ice cream.png"
+    # orig_prompt = "A cat sitting on a stack of pancakes."
 
-    continuously_edit_image(image_path, masker, orig_prompt)
+    continuously_edit_image(image_path, masker, orig_prompt, same_image=same_image)
 
 
-def continuously_edit_image(image_path, masker, orig_prompt):
+def continuously_edit_image(image_path, masker, orig_prompt, same_image=False):
     while True:
         edit_prompt = input("What edits do you want: ")
         orig_image = Image.open(image_path).convert("RGB")
 
         mask, editted_image_path = masker.edit_image(image_path=image_path, orig_prompt=orig_prompt,
-                                                 edit_prompt=edit_prompt, invalid_threshold=0.5, use_stable_diffusion=True)
+                                                 edit_prompt=edit_prompt, invalid_threshold=0.5, use_stable_diffusion=False)
         fig, axs = plt.subplots(1, 2)
         ax = axs[0]
         ax.imshow(orig_image)
@@ -186,7 +201,8 @@ def continuously_edit_image(image_path, masker, orig_prompt):
         fig.suptitle(f"{edit_prompt}", fontsize=18)
         plt.show()
 
-        image_path = editted_image_path
+        if not same_image:
+            image_path = editted_image_path
 
 def generate_and_edit():
     masker = Masker()
@@ -207,9 +223,9 @@ def generate_and_edit():
     continuously_edit_image(image_path, masker, orig_prompt)
 
 if __name__=="__main__":
-    generate_and_edit()
+    # generate_and_edit()
 
-
+    edit_existing_image(same_image=True)
     # for i, (mask, box) in enumerate(zip([masks], [boxes])):
     #     plt.figure(figsize=(10,10))
     #     plt.imshow(image)

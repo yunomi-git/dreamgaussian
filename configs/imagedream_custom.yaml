@@ -18,6 +18,9 @@ outdir: logs
 mesh_format: obj
 save_path: ???
 
+automatic_start: True
+
+
 ### Training
 # use mvdream instead of sd 2.1
 mvdream: False

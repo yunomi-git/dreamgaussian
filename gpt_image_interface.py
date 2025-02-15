@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 import matplotlib.pyplot as plt
-from lang_sam import LangSAM
+# from lang_sam import LangSAM
 from PIL import Image
 from api_key import api_key
 from openai import OpenAI
@@ -53,12 +53,12 @@ def grab_mask_over_image(mask, image_path, bw):
 
 class Masker:
     def __init__(self):
-        self.model = LangSAM()
+        # self.model = LangSAM()
         self.client = OpenAI(api_key=api_key)
-        self.pipe = StableDiffusionInpaintPipeline.from_pretrained(
-            "runwayml/stable-diffusion-inpainting", torch_dtype=torch.float16
-        )
-        self.pipe = self.pipe.to("cuda")
+        # self.pipe = StableDiffusionInpaintPipeline.from_pretrained(
+        #     "runwayml/stable-diffusion-inpainting", torch_dtype=torch.float16
+        # )
+        # self.pipe = self.pipe.to("cuda")
 
     def get_mask(self, image_path, prompt, enlarge_ratio=1.0, invalid_threshold=0.5):
         image = Image.open(image_path).convert("RGB")

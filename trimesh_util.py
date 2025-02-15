@@ -8,7 +8,6 @@ from scipy.spatial.transform import Rotation as R
 import warnings
 import io
 from PIL import Image
-import pyglet.gl as gl
 from PIL import ImageDraw, ImageFont
 TRIMESH_TEST_MESH = trimesh.Trimesh(vertices=np.array([[0.0, 1, 0.0], [1, 0.0, 0.0], [0, 0, 0], [0.0, 0.01, 1]]),
                                     faces=np.array([[0, 1, 2], [0, 1, 3], [0, 2, 3], [1, 2, 3]]))

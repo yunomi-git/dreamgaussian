@@ -10,21 +10,21 @@ import os
 import formlabs
 from formlabs.models.auto_orient_post_request import AutoOrientPostRequest
 
-# def create_scene(preform):
-#     return preform.api.scene_post({
-#         "machine_type": "FORM-4-0",
-#         "material_code": "FLGPGR05",
-#         "slice_thickness": 0.1,
-#         "print_setting": "DEFAULT",
-#     })
-
 def create_scene(preform):
     return preform.api.scene_post({
-        "machine_type": "FORM-3-0",
-        "material_code": "FLGPGR05",
+        "machine_type": "FORM-4-0",
+        "material_code": "FLRG1011", #"FLGPGR05",
         "slice_thickness": 0.1,
         "print_setting": "DEFAULT",
     })
+
+# def create_scene(preform):
+#     return preform.api.scene_post({
+#         "machine_type": "FORM-3-0",
+#         "material_code": "FLGPGR04",
+#         "slice_thickness": 0.1,
+#         "print_setting": "DEFAULT",
+#     })
 
 def run_preform_slice(object_path, output_dir_path, do_print=False):
     # pathToPreformServer = pathlib.Path().resolve() / "PreFormServer.app/Contents/MacOS/PreFormServer"
@@ -62,11 +62,14 @@ def run_preform_slice(object_path, output_dir_path, do_print=False):
                 create_scene(preform)
 
         save_path = os.path.join(output_dir_path, f"output.form")
-        preform.api.save_form_post(save_path)
         print(f"Saving to {save_path}")
+        preform.api.save_form_post(save_path)
 
-        if do_print:
-            preform.api.v1_print_post(printer="Diesel-M-EVT6-028", job_name="Dalle_print")
+        # if do_print:
+        print("Sending to printer!!")
+        # preform.api.v1_print_post(printer="SuperbBunyip", job_name="Dalle_print")
+        preform.api.v1_print_post(printer="Form4-SuccinctEel", job_name="PrintJob")
+        print("Send complete")
 
 # def send_file_to_print(printer_name, output_file, prompt):
 #     pathToPreformServer = "C:\\Users\\nomiy\MyProgramFiles\PreForm_Server\PreformServer.exe"

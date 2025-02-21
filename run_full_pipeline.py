@@ -15,10 +15,10 @@ from PIL import Image
 
 use_gui = True
 use_voice = True
-do_continuous_edit = True
-do_print = False
+do_continuous_edit = False #
+do_print = True #
 
-cache_request = "cat"
+cache_request = "dragon"
 cache_voice = True
 use_cached_image = True
 use_cached_3d = False
@@ -73,7 +73,7 @@ def augment_prompt(orig_prompt):
     return prompt
 
 def get_request_voice():
-    speaker.speak_text("I am now on standby.")
+    # speaker.speak_text("I am now on standby.")
     print(">Waiting for Hello")
     speaker.wait_for_speech(60)
     speaker.speak_text("Hey, what can I make for you?")
